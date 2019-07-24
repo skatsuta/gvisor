@@ -20,11 +20,3 @@ import (
 	_ "gvisor.dev/gvisor/pkg/sentry/platform/kvm"
 	_ "gvisor.dev/gvisor/pkg/sentry/platform/ptrace"
 )
-
-const (
-	// Ptrace runs the sandbox with the ptrace platform.
-	Ptrace = "ptrace"
-
-	// KVM runs the sandbox with the KVM platform.
-	KVM = "kvm"
-)
