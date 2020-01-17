@@ -2198,9 +2198,13 @@ func (s *SocketOperations) coalescingRead(ctx context.Context, dst usermem.IOSeq
 	var copied int
 
 	// Copy as many views as possible into the user-provided buffer.
-	for dst.NumBytes() != 0 {
+	for {
+		// Always do at least one fetchReadView, even if the dst.NumBytes() is 0.
 		err = s.fetchReadView()
 		if err != nil {
+			break
+		}
+		if dst.NumBytes() == 0 {
 			break
 		}
 

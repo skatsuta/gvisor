@@ -345,10 +345,12 @@ cc_binary(
     srcs = ["socket.cc"],
     linkstatic = 1,
     deps = [
+        ":ip_socket_test_util",
         ":socket_test_util",
         "//test/util:file_descriptor",
         "//test/util:test_main",
         "//test/util:test_util",
+        "@com_google_absl//absl/algorithm:container",
         "@com_google_googletest//:gtest",
     ],
 )

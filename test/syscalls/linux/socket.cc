@@ -15,7 +15,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <string>
+
 #include "gtest/gtest.h"
+#include "absl/algorithm/container.h"
+#include "test/syscalls/linux/ip_socket_test_util.h"
 #include "test/syscalls/linux/socket_test_util.h"
 #include "test/util/file_descriptor.h"
 #include "test/util/test_util.h"
@@ -57,6 +61,25 @@ TEST(SocketTest, ProtocolInet) {
         Socket(tests[i].domain, tests[i].type, tests[i].protocol));
   }
 }
+
+using TCPSocketTest = ::testing::TestWithParam<SocketKind>;
+
+TEST_P(TCPSocketTest, RecvOnClosedSocket) {
+  auto s = ASSERT_NO_ERRNO_AND_VALUE(GetParam().Create());
+  char buf[1];
+  EXPECT_THAT(recv(s.get()->get(), buf, 0, 0), SyscallFailsWithErrno(ENOTCONN));
+  EXPECT_THAT(recv(s.get()->get(), buf, 1, 0), SyscallFailsWithErrno(ENOTCONN));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TCPSocketTest, TCPSocketTest,
+    ::testing::Values(IPv4TCPUnboundSocket(0), IPv6TCPUnboundSocket(0)),
+    [](const ::testing::TestParamInfo<TCPSocketTest::ParamType>& socket_kind) {
+      std::string name = socket_kind.param.description;
+      absl::c_replace_if(
+          name, [](char c) { return !std::isalnum(c); }, '_');
+      return name;
+    });
 
 using SocketOpenTest = ::testing::TestWithParam<int>;
 
