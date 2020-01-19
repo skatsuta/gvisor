@@ -846,6 +846,9 @@ func (e *endpoint) closePendingAcceptableConnectionsLocked() {
 			n.notifyProtocolGoroutine(notifyReset)
 			// close all connections that have completed but
 			// not accepted by the application.
+			n.rcvListMu.Lock()
+			n.rcvBufUsed = 1 // Faking received data so that shutdown will send RST.
+			n.rcvListMu.Unlock()
 			n.Close()
 		}
 	}()
