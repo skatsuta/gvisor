@@ -174,6 +174,8 @@ type Matcher interface {
 	// Match returns whether the packet matches and whether the packet
 	// should be "hotdropped", i.e. dropped immediately. This is usually
 	// used for suspicious packets.
+	//
+	// Precondition: packet.NetworkHeader is set.
 	Match(hook Hook, packet tcpip.PacketBuffer, interfaceName string) (matches bool, hotdrop bool)
 }
 
