@@ -2047,8 +2047,14 @@ func (e *endpoint) Shutdown(flags tcpip.ShutdownFlags) *tcpip.Error {
 				// work mutex is available.
 				if e.workMu.TryLock() {
 					e.mu.Lock()
-					e.resetConnectionLocked(tcpip.ErrConnectionAborted)
-					e.notifyProtocolGoroutine(notifyTickleWorker)
+					// We need to double check here to make
+					// sure worker has not transitioned the
+					// endpoint out of a connected state
+					// before trying to send a reset.
+					if e.EndpointState().connected() {
+						e.resetConnectionLocked(tcpip.ErrConnectionAborted)
+						e.notifyProtocolGoroutine(notifyTickleWorker)
+					}
 					e.mu.Unlock()
 					e.workMu.Unlock()
 				} else {
@@ -2160,6 +2166,9 @@ func (e *endpoint) listen(backlog int) *tcpip.Error {
 	e.isRegistered = true
 	e.setEndpointState(StateListen)
 
+	// The channel may be non-nil when we're restoring the endpoint, and it
+	// may be pre-populated with some previously accepted (but not Accepted)
+	// endpoints.
 	if e.acceptedChan == nil {
 		e.acceptedChan = make(chan *endpoint, backlog)
 	}
